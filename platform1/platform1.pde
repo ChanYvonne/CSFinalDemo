@@ -85,6 +85,17 @@ Boolean levelLostChris(){ // checks whether player has fallen in the cracks aka 
   return theWorld.deathSquare(theChris.position); 
 }
 
+/*
+void checkForPlayerBumping(){  
+  if(((theChris.getPosY() >= theThomas.getPosY() - thomas.height && theThomas.getPosY() >= theChris.getPosY()) ||
+  (theThomas.getPosY() >= theChris.getPosY() - chris.height && theChris.getPosY() >= theThomas.getPosY())) &&
+  (abs(theChris.getPosX() - theThomas.getPosX()) <= 0.5*(thomas.width + chris.width))){
+    theChris.resetVelocity();
+    theThomas.resetVelocity();
+  }
+}
+*/
+
 void outlinedText(String sayThis, float atX, float atY) {
   textFont(font); // use the font we loaded
   fill(0); // white for the upcoming text, drawn in each direction to make outline
@@ -101,8 +112,11 @@ void updateCameraPosition() {
   // the left side of the camera view should never go right of the above number
   // think of it as "total width of the level world" (World.GRID_UNITS_WIDE*World.GRID_UNIT_SIZE)
   // minus "width of the screen/window" (width)
-
-  cameraOffsetX = theThomas.position.x-width/2;
+  if (currentPlayer == theThomas){
+    cameraOffsetX = theThomas.position.x-width/2;
+  }else if (currentPlayer == theChris){
+    cameraOffsetX = theChris.position.x-width/2;
+  }
   if (cameraOffsetX < 0) {
     cameraOffsetX = 0;
   }
@@ -119,12 +133,13 @@ void draw() { // called automatically, 24 times per second because of setup()'s 
   updateCameraPosition();
 
   theWorld.render();
-  
+    
   if (levelLostThomas() == false || levelLostChris() == false){
     if (currentPlayer == theThomas){
       image(cursor, theThomas.position.x- 0.3*thomas.width, theThomas.position.y - 1.4*thomas.height);
       theThomas.inputCheck();
       theThomas.move();
+      
     }
     if (currentPlayer == theChris){
       image(cursor, theChris.position.x-0.3*chris.width, theChris.position.y - 1.5*chris.height);
@@ -134,15 +149,16 @@ void draw() { // called automatically, 24 times per second because of setup()'s 
     theThomas.draw();
     theChris.draw();
   }
-
+  
   popMatrix(); // undoes the translate function from earlier in draw()
 
   if (focused == false) { // does the window currently not have keyboard focus?
     textAlign(CENTER);
-    outlinedText("Click this area to play.\n\nUse arrows to move.\nSpacebar to jump.\nQ to switch characters.", width/2, height-90);
+    outlinedText("Click this area to play.\n\nUse arrows to move.\nSpacebar to jump.\nQ to switch characters.", width/2, height-120);
   } else {
     textAlign(RIGHT);
-    if (levelWonThomas() == false && levelWonChris() == false) { // stop updating timer after player finishes
+    if (levelWonThomas() == false && levelWonChris() == false &&
+        (levelLostThomas() == false || levelLostChris() == false)) { // stop updating timer after player finishes
       levelCurrentTimeSec = millis()/1000; // dividing by 1000 to turn milliseconds into seconds
     }
     int minutes = (levelCurrentTimeSec-levelStartTimeSec)/60;
